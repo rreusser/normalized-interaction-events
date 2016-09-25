@@ -42,7 +42,6 @@ function makeCamera2D (opts) {
 
   var options = extend({
     element: opts.element || window,
-    constrainZoom: true
   }, opts || {});
 
   var element = options.element;
@@ -61,7 +60,6 @@ function makeCamera2D (opts) {
 
   interactionEvents({
     element: element,
-    constrainZoom: options.constrainZoom,
   }).on('interactionstart', function (ev) {
     ev.preventDefault();
   }).on('interactionend', function (ev) {
