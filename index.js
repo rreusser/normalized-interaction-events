@@ -6,8 +6,8 @@ var mouseChange = require('mouse-change');
 var eventOffset = require('mouse-event-offset');
 var eventEmitter = require('event-emitter');
 
-function normalizedInteractionEvents (opts) {
-  var element = (opts && opts.element) ? opts.element : window
+function normalizedInteractionEvents (element) {
+  element = element || window;
 
   var emitter = eventEmitter();
   var enabled = false;
@@ -36,10 +36,11 @@ function normalizedInteractionEvents (opts) {
     ev.dz = event.deltaZ;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.zoomz = 1;
     ev.theta = 0;
     ev.dtheta = 0;
     ev.originalEvent = event;
+
+    console.log('ev:', ev);
 
     emitter.emit('wheel', ev);
 
@@ -64,7 +65,6 @@ function normalizedInteractionEvents (opts) {
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -89,7 +89,6 @@ function normalizedInteractionEvents (opts) {
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -115,7 +114,6 @@ function normalizedInteractionEvents (opts) {
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -201,7 +199,6 @@ function normalizedInteractionEvents (opts) {
       ev.dz = 0;
       ev.zoomx = 1;
       ev.zoomy = 1;
-      ev.zoomz = 1;
       ev.dtheta = 0;
       ev.originalEvent = event;
       emitter.emit(activeTouchCount === 1 ? 'touchstart' : 'pinchstart', ev);
@@ -246,7 +243,7 @@ function normalizedInteractionEvents (opts) {
           ev.dz = 0;
           ev.zoomx = 1;
           ev.zoomy = 1;
-          ev.zoomz = 1;
+          ev.radius = 0;
           ev.theta = 0;
           ev.dtheta = 0;
           ev.originalEvent = event;
@@ -293,7 +290,6 @@ function normalizedInteractionEvents (opts) {
           ev.dz = 0;
           ev.zoomx = dr;
           ev.zoomy = dr;
-          ev.zoomz = 1;
           ev.radius = r1;
           ev.theta = theta1;
           ev.dtheta = dtheta;
@@ -359,7 +355,6 @@ function normalizedInteractionEvents (opts) {
       ev.dz = 0;
       ev.zoomx = 1;
       ev.zoomy = 1;
-      ev.zoomz = 1;
       ev.theta = 0;
       ev.dtheta = 0;
       ev.originalEvent = event;
