@@ -1,0 +1,23 @@
+{
+  "name": "normalized-interaction-events",
+  "version": "1.0.0",
+  "description": "Normalized events for desktop and mobile interactions",
+  "main": "index.js",
+  "scripts": {
+    "start": "budo demo.js --live --open",
+    "build": "browserify demo.js | indexhtmlify > demo.html"
+  },
+  "keywords": [],
+  "author": "Ricky Reusser",
+  "license": "MIT",
+  "dependencies": {
+    "event-emitter": "^0.3.5",
+    "mouse-change": "^1.4.0",
+    "mouse-event-offset": "^3.0.2"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.0",
+    "budo": "^11.2.0",
+    "indexhtmlify": "^1.3.1"
+  }
+}
