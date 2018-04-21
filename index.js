@@ -12,6 +12,7 @@ function normalizedInteractionEvents (opts) {
   var emitter = eventEmitter();
   var enabled = false;
   var previousPosition = [null, null];
+  var previousFingerPosition = [null, null];
   var currentPosition = [null, null];
   var fingers = [null, null];
   var activeTouchCount = 0;
@@ -28,14 +29,14 @@ function normalizedInteractionEvents (opts) {
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = currentPosition[0];
-    ev.y0 = currentPosition[1];
+    ev.x0 = ev.x = currentPosition[0];
+    ev.y0 = ev.y = currentPosition[1];
     ev.dx = event.deltaX;
     ev.dy = event.deltaY;
     ev.dz = event.deltaZ;
-    ev.dsx = 1;
-    ev.dsy = 1;
-    ev.dsz = 1;
+    ev.zoomx = 1;
+    ev.zoomy = 1;
+    ev.zoomz = 1;
     ev.theta = 0;
     ev.dtheta = 0;
     ev.originalEvent = event;
@@ -46,19 +47,24 @@ function normalizedInteractionEvents (opts) {
     previousPosition[1] = currentPosition[1];
   }
 
+  var x0 = null;
+  var y0 = null;
+
   function onMouseUp (event) {
     eventOffset(event, element, currentPosition);
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = currentPosition[0];
-    ev.y0 = currentPosition[1];
+    ev.x = currentPosition[0];
+    ev.y = currentPosition[1];
+    ev.x0 = x0;
+    ev.y0 = y0;
     ev.dx = 0;
     ev.dy = 0;
     ev.dz = 0;
-    ev.dsx = 1;
-    ev.dsy = 1;
-    ev.dsz = 1;
+    ev.zoomx = 1;
+    ev.zoomy = 1;
+    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -66,6 +72,7 @@ function normalizedInteractionEvents (opts) {
 
     emitter.emit('mouseup', ev);
 
+    x0 = y0 = null;
     previousPosition[0] = currentPosition[0];
     previousPosition[1] = currentPosition[1];
   }
@@ -75,14 +82,14 @@ function normalizedInteractionEvents (opts) {
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = currentPosition[0];
-    ev.y0 = currentPosition[1];
+    ev.x0 = x0 = currentPosition[0];
+    ev.y0 = y0 = currentPosition[1];
     ev.dx = 0;
     ev.dy = 0;
     ev.dz = 0;
-    ev.dsx = 1;
-    ev.dsy = 1;
-    ev.dsz = 1;
+    ev.zoomx = 1;
+    ev.zoomy = 1;
+    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -99,14 +106,16 @@ function normalizedInteractionEvents (opts) {
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = currentPosition[0];
-    ev.y0 = currentPosition[1];
+    ev.x0 = x0;
+    ev.y0 = y0;
+    ev.x = currentPosition[0];
+    ev.y = currentPosition[1];
     ev.dx = currentPosition[0] - previousPosition[0];
     ev.dy = currentPosition[1] - previousPosition[1];
     ev.dz = 0;
-    ev.dsx = 1;
-    ev.dsy = 1;
-    ev.dsz = 1;
+    ev.zoomx = 1;
+    ev.zoomy = 1;
+    ev.zoomz = 1;
     ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
@@ -131,8 +140,8 @@ function normalizedInteractionEvents (opts) {
   }
 
   function onTouchStart (event) {
-    previousPosition[0] = null;
-    previousPosition[1] = null;
+    previousFingerPosition[0] = null;
+    previousFingerPosition[1] = null;
 
     for (var i = 0; i < event.changedTouches.length; i++) {
       var newTouch = event.changedTouches[i]
@@ -162,13 +171,13 @@ function normalizedInteractionEvents (opts) {
       }
     }
 
-    var x0avg = 0;
-    var y0avg = 0;
+    var xavg = 0;
+    var yavg = 0;
     var fingerCount = 0;
     for (var i = 0; i < fingers.length; i++) {
       if (!fingers[i]) continue;
-      x0avg += fingers[i].position[0];
-      y0avg += fingers[i].position[1];
+      xavg += fingers[i].position[0];
+      yavg += fingers[i].position[1];
       fingerCount++;
     }
 
@@ -185,22 +194,20 @@ function normalizedInteractionEvents (opts) {
 
       ev.buttons = 0;
       ev.mods = {};
-      ev.x0 = x0avg / fingerCount;
-      ev.y0 = y0avg / fingerCount;
+      x0 = ev.x = ev.x0 = xavg / fingerCount;
+      y0 = ev.y = ev.y0 = yavg / fingerCount;
       ev.dx = 0;
       ev.dy = 0;
       ev.dz = 0;
-      ev.dsx = 1;
-      ev.dsy = 1;
-      ev.dsz = 1;
+      ev.zoomx = 1;
+      ev.zoomy = 1;
+      ev.zoomz = 1;
       ev.dtheta = 0;
       ev.originalEvent = event;
       emitter.emit(activeTouchCount === 1 ? 'touchstart' : 'pinchstart', ev);
     }
   }
 
-  var px0 = null;
-  var py0 = null;
   function onTouchMove (event) {
     var idx;
     var changed = false
@@ -221,23 +228,25 @@ function normalizedInteractionEvents (opts) {
           if (fingers[idx]) break;
         }
 
-        if (fingers[idx] && previousPosition[idx]) {
+        if (fingers[idx] && previousFingerPosition[idx]) {
           var x = fingers[idx].position[0];
           var y = fingers[idx].position[1];
 
-          var dx = x - previousPosition[idx][0];
-          var dy = y - previousPosition[idx][1];
+          var dx = x - previousFingerPosition[idx][0];
+          var dy = y - previousFingerPosition[idx][1];
 
           ev.buttons = 0;
           ev.mods = {};
-          ev.x0 = x;
-          ev.y0 = y;
+          ev.x = x;
+          ev.y = y;
+          ev.x0 = x0;
+          ev.y0 = y0;
           ev.dx = dx;
           ev.dy = dy;
           ev.dz = 0;
-          ev.dsx = 1;
-          ev.dsy = 1;
-          ev.dsz = 1;
+          ev.zoomx = 1;
+          ev.zoomy = 1;
+          ev.zoomz = 1;
           ev.theta = 0;
           ev.dtheta = 0;
           ev.originalEvent = event;
@@ -245,10 +254,10 @@ function normalizedInteractionEvents (opts) {
           emitter.emit('touchmove', ev);
         }
       } else if (activeTouchCount === 2) {
-        if (previousPosition[0] && previousPosition[1]) {
+        if (previousFingerPosition[0] && previousFingerPosition[1]) {
           // Previous two-finger vector:
-          var pos0A = previousPosition[0];
-          var pos0B = previousPosition[1];
+          var pos0A = previousFingerPosition[0];
+          var pos0B = previousFingerPosition[1];
           var dx0 = pos0B[0] - pos0A[0];
           var dy0 = pos0B[1] - pos0A[1];
 
@@ -266,8 +275,8 @@ function normalizedInteractionEvents (opts) {
           var r1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) * 0.5;
           var theta1 = Math.atan2(dy1, dx1);
 
-          var x0 = (pos0B[0] + pos0A[0]) * 0.5;
-          var y0 = (pos0B[1] + pos0A[1]) * 0.5;
+          var x = (pos0B[0] + pos0A[0]) * 0.5;
+          var y = (pos0B[1] + pos0A[1]) * 0.5;
           var dx = 0.5 * (pos1B[0] + pos1A[0] - pos0A[0] - pos0B[0]);
           var dy = 0.5 * (pos1B[1] + pos1A[1] - pos0A[1] - pos0B[1]);
           var dr = r1 / r0;
@@ -275,33 +284,32 @@ function normalizedInteractionEvents (opts) {
 
           ev.buttons = 0;
           ev.mods = mods;
+          ev.x = x;
+          ev.y = y;
           ev.x0 = x0;
           ev.y0 = y0;
           ev.dx = dx;
           ev.dy = dy;
           ev.dz = 0;
-          ev.dsx = dr;
-          ev.dsy = dr;
-          ev.dsz = 1;
+          ev.zoomx = dr;
+          ev.zoomy = dr;
+          ev.zoomz = 1;
           ev.radius = r1;
           ev.theta = theta1;
           ev.dtheta = dtheta;
           ev.originalEvent = event;
 
           emitter.emit('pinchmove', ev);
-
-          px0 = x0;
-          py0 = y0;
         }
       }
     }
 
     if (fingers[0]) {
-      previousPosition[0] = fingers[0].position.slice();
+      previousFingerPosition[0] = fingers[0].position.slice();
     }
 
     if (fingers[1]) {
-      previousPosition[1] = fingers[1].position.slice();
+      previousFingerPosition[1] = fingers[1].position.slice();
     }
   }
 
@@ -320,40 +328,45 @@ function normalizedInteractionEvents (opts) {
       }
     }
 
-    var x0avg = 0;
-    var y0avg = 0;
+    var xavg = 0;
+    var yavg = 0;
     if (activeTouchCount === 0) {
       if (lastFinger) {
-        x0avg = lastFinger.position[0];
-        y0avg = lastFinger.position[1];
+        xavg = lastFinger.position[0];
+        yavg = lastFinger.position[1];
       }
     } else {
       var fingerCount = 0;
       for (var i = 0; i < fingers.length; i++) {
         if (!fingers[i]) continue;
-        x0avg += fingers[i].position[0];
-        y0avg += fingers[i].position[1];
+        xavg += fingers[i].position[0];
+        yavg += fingers[i].position[1];
         fingerCount++;
       }
-      x0avg /= fingerCount;
-      y0avg /= fingerCount;
+      xavg /= fingerCount;
+      yavg /= fingerCount;
     }
 
     if (activeTouchCount < 2) {
       ev.buttons = 0;
       ev.mods = mods;
-      ev.x0 = x0avg;
-      ev.y0 = y0avg;
+      ev.x = xavg;
+      ev.y = yavg;
+      ev.x0 = x0;
+      ev.y0 = y0;
       ev.dx = 0;
       ev.dy = 0;
       ev.dz = 0;
-      ev.dsx = 1;
-      ev.dsy = 1;
-      ev.dsz = 1;
+      ev.zoomx = 1;
+      ev.zoomy = 1;
+      ev.zoomz = 1;
       ev.theta = 0;
       ev.dtheta = 0;
       ev.originalEvent = event;
       emitter.emit(activeTouchCount === 0 ? 'touchend' : 'pinchend', ev);
+    }
+    if (activeTouchCount === 0) {
+      x0 = y0 = null;
     }
   }
 

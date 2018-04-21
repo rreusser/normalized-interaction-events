@@ -1,6 +1,6 @@
-# interaction-events
+# normalized-interaction-events
 
-> Convert mouse and touch interactions to matrix transforms
+> Normalized events for desktop and mobile interactions
 
 [![experimental][stability-experimental]][stability-url]
 <!--[![Build Status][travis-image]][travis-url]-->
@@ -11,9 +11,11 @@
 
 ## Introduction
 
+This module tells you in a consistent manner about the geometry of user interactions, which is perhaps what you really wanted to know when you set out to write a nice graphical interface.
+
 ## License
 
-&copy; 2016 Ricky Reusser. MIT License.
+&copy; 2018 Ricky Reusser. MIT License.
 
 
 <!-- BADGES -->
