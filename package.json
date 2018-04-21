@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "budo demo.js --live --open",
-    "build": "browserify demo.js | indexhtmlify > demo.html"
+    "build": "browserify demo.js | indexhtmlify > index.html"
   },
   "keywords": [],
   "author": "Ricky Reusser",
