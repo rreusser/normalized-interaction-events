@@ -44,7 +44,6 @@ normalizedInteractionsEvents({
 //   dz: 0,
 //   zoomx: 1,
 //   zoomy: 1,
-//   zoomz: 1,
 //   radius: 0,
 //   theta: 0,
 //   dtheta: 0,
