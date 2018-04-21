@@ -40,8 +40,6 @@ function normalizedInteractionEvents (element) {
     ev.dtheta = 0;
     ev.originalEvent = event;
 
-    console.log('ev:', ev);
-
     emitter.emit('wheel', ev);
 
     previousPosition[0] = currentPosition[0];
