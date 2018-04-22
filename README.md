@@ -42,6 +42,7 @@ normalizedInteractionsEvents({
 //   dx: -1,
 //   dy: 2,
 //   dz: 0,
+//   dragging: true,
 //   zoomx: 1,
 //   zoomy: 1,
 //   radius: 0,
@@ -88,6 +89,7 @@ The returned event has the following fields:
 - `dx`: change in x position from previous event. For wheel event returns wheel event deltaX.
 - `dy`: change in y position. For wheel event returns wheel event deltaY.
 - `dz`: change in z position. For wheel event returns wheel event deltaY. Is zero except for wheel events (where it's still almost certainly zero).
+- `dragging`: true while a mouse, touch, or pinch interaction is taking place or for single wheel events. Better than using the mouse depressed state for detecting when to assume a drag since you want to be sure that the drag *originated* within the window.
 - `zoomx`: horizontal zoom factor relative to previous event. `1` reflects no change. For pinch events only. (Interpreting wheel events as a zoom is left to usage.)
 - `zoomy`: vertical zoom factor relative to previous event. `1` reflects no change. For pinch events only.
 - `theta`: angle of the second touch relative to the first. Nonzero for pinch events only.
