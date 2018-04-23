@@ -17,23 +17,42 @@ function normalizedInteractionEvents (element) {
   var activeTouchCount = 0;
   var ev = {};
 
-  var buttons = 0, mods = {};
+
+  var width, height;
+
+  var getSize = element === window ? function () {
+    width = window.innerWidth;
+    height = window.innerHeight;
+  } : function () {
+    width = element.clientWidth;
+    height = element.clientHeight;
+  }
+
+  var buttons = 0;
+  var mouseX;
+  var mouseY;
+  var mods = {};
   var changeListener = mouseChange(element, function(pbuttons, px, py, pmods) {
+    mouseX = px;
+    mouseY = py;
     buttons = pbuttons;
     mods = pmods;
   });
 
   function onWheel (event) {
     eventOffset(event, element, currentPosition);
+    getSize();
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = ev.x = currentPosition[0];
-    ev.y0 = ev.y = currentPosition[1];
-    ev.dx = event.deltaX;
-    ev.dy = event.deltaY;
-    ev.dz = event.deltaZ;
-    ev.dragging = true;
+    ev.x0 = ev.x = ev.x1 = 2 * currentPosition[0] / width - 1;
+    ev.y0 = ev.y = ev.y1 = 1 - 2 * currentPosition[1] / height;
+    ev.x2 = null;
+    ev.y2 = null;
+    ev.dx = 2 * event.deltaX / width;
+    ev.dy = -2 * event.deltaY / height;
+    ev.dz = 2 * event.deltaZ / width;
+    ev.active = 1;
     ev.zoomx = 1;
     ev.zoomy = 1;
     ev.theta = 0;
@@ -48,25 +67,27 @@ function normalizedInteractionEvents (element) {
 
   var x0 = null;
   var y0 = null;
-  var dragging = false;
+  var active = 0;
 
   function onMouseUp (event) {
     eventOffset(event, element, currentPosition);
-    dragging = false;
+    active = 0;
+    getSize();
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x = currentPosition[0];
-    ev.y = currentPosition[1];
-    ev.dragging = false;
-    ev.x0 = x0;
-    ev.y0 = y0;
+    ev.x = ev.x1 = 2 * currentPosition[0] / width - 1;
+    ev.y = ev.y1 = 1 - 2 * currentPosition[1] / height;
+    ev.x2 = null;
+    ev.y2 = null;
+    ev.active = active;
+    ev.x0 = 2 * x0 / width - 1;
+    ev.y0 = 1 - 2 * y0 / height;
     ev.dx = 0;
     ev.dy = 0;
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
     ev.originalEvent = event;
@@ -74,25 +95,31 @@ function normalizedInteractionEvents (element) {
     emitter.emit('mouseup', ev);
 
     x0 = y0 = null;
+
     previousPosition[0] = currentPosition[0];
     previousPosition[1] = currentPosition[1];
   }
 
   function onMouseDown (event) {
     eventOffset(event, element, currentPosition);
-    dragging = true;
+    active = 1;
+    getSize();
+
+    x0 = mouseX;
+    y0 = mouseY;
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = x0 = currentPosition[0];
-    ev.y0 = y0 = currentPosition[1];
-    ev.dragging = dragging;
+    ev.x = ev.x0 = ev.x1 = 2 * currentPosition[0] / width - 1;
+    ev.y = ev.y0 = ev.y1 = 1 - 2 * currentPosition[1] / height;
+    ev.x2 = null;
+    ev.y2 = null;
+    ev.active = active;
     ev.dx = 0;
     ev.dy = 0;
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
     ev.originalEvent = event;
@@ -105,20 +132,22 @@ function normalizedInteractionEvents (element) {
 
   function onMouseMove (event) {
     eventOffset(event, element, currentPosition);
+    getSize();
 
     ev.buttons = buttons;
     ev.mods = mods;
-    ev.x0 = x0;
-    ev.y0 = y0;
-    ev.x = currentPosition[0];
-    ev.y = currentPosition[1];
-    ev.dx = currentPosition[0] - previousPosition[0];
-    ev.dy = currentPosition[1] - previousPosition[1];
-    ev.dragging = dragging;
+    ev.x0 = 2 * x0 / width - 1;
+    ev.y0 = 1 - 2 * y0 / height;
+    ev.x = ev.x1 = 2 * currentPosition[0] / width - 1;
+    ev.y = ev.y1 = 1 - 2 * currentPosition[1] / height;
+    ev.x2 = null;
+    ev.y2 = null;
+    ev.dx = 2 * (currentPosition[0] - previousPosition[0]) / width;
+    ev.dy = -2 * (currentPosition[1] - previousPosition[1]) / height;
+    ev.active = active;
     ev.dz = 0;
     ev.zoomx = 1;
     ev.zoomy = 1;
-    ev.radius = 0;
     ev.theta = 0;
     ev.dtheta = 0;
     ev.originalEvent = event;
@@ -182,24 +211,36 @@ function normalizedInteractionEvents (element) {
       yavg += fingers[i].position[1];
       fingerCount++;
     }
+    xavg /= fingerCount;
+    yavg /= fingerCount;
 
 
     if (activeTouchCount > 0) {
-      dragging = true;
-      ev.radius = ev.theta = 0;
+      ev.theta = 0;
 
       if (fingerCount > 1) {
         var dx = fingers[1].position[0] - fingers[0].position[0];
-        var dy = fingers[1].position[1] - fingers[0].position[1];
-        ev.radius = Math.sqrt(dx * dx + dy * dy) * 0.5;
+        var dy = (fingers[0].position[1] - fingers[1].position[1]) * width / height;
         ev.theta = Math.atan2(dy, dx);
       }
 
+      getSize();
       ev.buttons = 0;
       ev.mods = {};
-      x0 = ev.x = ev.x0 = xavg / fingerCount;
-      y0 = ev.y = ev.y0 = yavg / fingerCount;
-      ev.dragging = dragging;
+      ev.active = activeTouchCount;
+      x0 = xavg;
+      y0 = yavg;
+      ev.x0 = 2 * x0 / width - 1;
+      ev.y0 = 1 - 2 * y0 / height;
+      ev.x = 2 * xavg / width - 1;
+      ev.y = 1 - 2 * yavg / height;
+      ev.x1 = 2 * fingers[0].position[0] / width - 1;
+      ev.y1 = 1 - 2 * fingers[0].position[1] / height;
+      if (activeTouchCount > 1) {
+        ev.x2 = 2 * fingers[1].position[0] / width - 1;
+        ev.y2 = 1 - 2 * fingers[1].position[1] / height;
+      }
+      ev.active = activeTouchCount;
       ev.dx = 0;
       ev.dy = 0;
       ev.dz = 0;
@@ -240,17 +281,18 @@ function normalizedInteractionEvents (element) {
 
           ev.buttons = 0;
           ev.mods = {};
-          ev.dragging = dragging;
-          ev.x = x;
-          ev.y = y;
-          ev.x0 = x0;
-          ev.y0 = y0;
-          ev.dx = dx;
-          ev.dy = dy;
+          ev.active = activeTouchCount;
+          ev.x = ev.x1 = 2 * x / width - 1;
+          ev.y = ev.y1 = 1 - 2 * y / height;
+          ev.x2 = null;
+          ev.y2 = null;
+          ev.x0 = 2 * x0 / width - 1;
+          ev.y0 = 1 - 2 * y0 / height;
+          ev.dx = 2 * dx / width;
+          ev.dy = -2 * dy / height;
           ev.dz = 0;
           ev.zoomx = 1;
           ev.zoomy = 1;
-          ev.radius = 0;
           ev.theta = 0;
           ev.dtheta = 0;
           ev.originalEvent = event;
@@ -263,13 +305,13 @@ function normalizedInteractionEvents (element) {
           var pos0A = previousFingerPosition[0];
           var pos0B = previousFingerPosition[1];
           var dx0 = pos0B[0] - pos0A[0];
-          var dy0 = pos0B[1] - pos0A[1];
+          var dy0 = (pos0B[1] - pos0A[1]) * width / height;
 
           // Current two-finger vector:
           var pos1A = fingers[0].position;
           var pos1B = fingers[1].position;
           var dx1 = pos1B[0] - pos1A[0];
-          var dy1 = pos1B[1] - pos1A[1];
+          var dy1 = (pos1A[1] - pos1B[1]) * width / height;
 
           // r, theta for the previous two-finger touch:
           var r0 = Math.sqrt(dx0 * dx0 + dy0 * dy0) * 0.5;
@@ -279,26 +321,30 @@ function normalizedInteractionEvents (element) {
           var r1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) * 0.5;
           var theta1 = Math.atan2(dy1, dx1);
 
-          var x = (pos0B[0] + pos0A[0]) * 0.5;
-          var y = (pos0B[1] + pos0A[1]) * 0.5;
+          var xavg = (pos0B[0] + pos0A[0]) * 0.5;
+          var yavg = (pos0B[1] + pos0A[1]) * 0.5;
           var dx = 0.5 * (pos1B[0] + pos1A[0] - pos0A[0] - pos0B[0]);
           var dy = 0.5 * (pos1B[1] + pos1A[1] - pos0A[1] - pos0B[1]);
+
           var dr = r1 / r0;
           var dtheta = theta1 - theta0;
 
           ev.buttons = 0;
           ev.mods = mods;
-          ev.dragging = dragging;
-          ev.x = x;
-          ev.y = y;
-          ev.x0 = x0;
-          ev.y0 = y0;
-          ev.dx = dx;
-          ev.dy = dy;
+          ev.active = activeTouchCount;
+          ev.x = 2 * xavg / width - 1;
+          ev.y = 1 - 2 * yavg / height;
+          ev.x0 = 2 * x0 / width - 1;
+          ev.y0 = 1 - 2 * y0 / height;
+          ev.x1 = 2 * pos1A[0] / width - 1;
+          ev.y1 = 1 - 2 * pos1A[1] / height;
+          ev.x2 = 2 * pos1B[0] / width - 1;
+          ev.y2 = 1 - 2 * pos1B[1] / height;
+          ev.dx = 2 * dx / width;
+          ev.dy = -2 * dy / height;
           ev.dz = 0;
           ev.zoomx = dr;
           ev.zoomy = dr;
-          ev.radius = r1;
           ev.theta = theta1;
           ev.dtheta = dtheta;
           ev.originalEvent = event;
@@ -335,13 +381,11 @@ function normalizedInteractionEvents (element) {
     var xavg = 0;
     var yavg = 0;
     if (activeTouchCount === 0) {
-      dragging = false;
       if (lastFinger) {
         xavg = lastFinger.position[0];
         yavg = lastFinger.position[1];
       }
     } else {
-      dragging = dragging;
       var fingerCount = 0;
       for (var i = 0; i < fingers.length; i++) {
         if (!fingers[i]) continue;
@@ -356,11 +400,11 @@ function normalizedInteractionEvents (element) {
     if (activeTouchCount < 2) {
       ev.buttons = 0;
       ev.mods = mods;
-      ev.dragging = dragging;
-      ev.x = xavg;
-      ev.y = yavg;
-      ev.x0 = x0;
-      ev.y0 = y0;
+      ev.active = activeTouchCount;
+      ev.x = 2 * xavg / width - 1;
+      ev.y = 1 - 2 * yavg / height;
+      ev.x0 = 2 * x0 / width - 1;
+      ev.y0 = 1 - 2 * y0 / height;
       ev.dx = 0;
       ev.dy = 0;
       ev.dz = 0;

@@ -17,24 +17,28 @@ function clear() {
 
 function circle (x, y, radius, color) {
   ctx.fillStyle = color || '#000';
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.beginPath()
+  ctx.arc(
+    (x + 1) * 0.5 * window.innerWidth,
+    (-y + 1) * 0.5 * window.innerHeight,
+    radius,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 function line (x1, y1, x2, y2) {
   ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
+  ctx.moveTo((x1 + 1) * 0.5 * window.innerWidth, (-y1 + 1) * 0.5 * window.innerHeight);
+  ctx.lineTo((x2 + 1) * 0.5 * window.innerWidth, (-y2 + 1) * 0.5 * window.innerHeight);
   ctx.stroke();
 }
 
-var dragging = false;
-var x0 = y0 = 0;
 var wheelsize = 0;
 normalizedInteractionEvents()
   .on('wheel', function (event) {
     clear();
-    wheelsize = (wheelsize - event.dy * 0.03) % 40;
+    wheelsize = (wheelsize + event.dy * 10.0) % 40;
     function opacity (r) {
       return (0.5 - 0.5 * Math.cos(2.0 * Math.PI * (r - 20) / 80)) * 0.7;
     }
@@ -46,20 +50,18 @@ normalizedInteractionEvents()
   })
   .on('mousedown', function (event) {
     clear();
-    dragging = true;
     circle(event.x, event.y, 50, 'rgba(255, 0, 0, 0.5)');
     event.originalEvent.preventDefault();
   })
   .on('mousemove', function (event) {
     clear();
     circle(event.x, event.y, 50, 'rgba(0, 0, 0, 0.5)');
-    if (dragging) {
+    if (event.active) {
       line(event.x0, event.y0, event.x, event.y);
     }
     event.originalEvent.preventDefault();
   })
   .on('mouseup', function (event) {
-    dragging = false;
     clear();
     circle(event.x, event.y, 50, 'rgba(255, 0, 0, 0.5)');
     event.originalEvent.preventDefault();
@@ -84,18 +86,24 @@ normalizedInteractionEvents()
   })
   .on('pinchstart', function (event) {
     clear();
-    circle(event.x, event.y, event.radius, 'rgba(0, 0, 0, 0.5)');
-    var dx = event.radius * Math.cos(event.theta);
-    var dy = event.radius * Math.sin(event.theta);
+    circle(event.x1, event.y1, 100, 'rgba(0, 0, 0, 0.5)');
+    circle(event.x2, event.y2, 100, 'rgba(0, 0, 0, 0.5)');
+    //line(event.x1, event.y1, event.x2, event.y2);
+
+    var dx = 100 * Math.cos(event.theta);
+    var dy = 100 * Math.sin(event.theta);
     line(event.x - dx, event.y - dy, event.x + dx, event.y + dy);
     event.originalEvent.preventDefault();
   })
   .on('pinchmove', function (event) {
     clear();
-    circle(event.x, event.y, event.radius, 'rgba(0, 0, 0, 0.5)');
+    circle(event.x1, event.y1, 100, 'rgba(0, 0, 0, 0.5)');
+    circle(event.x2, event.y2, 100, 'rgba(0, 0, 0, 0.5)');
     line(event.x0, event.y0, event.x, event.y);
-    var dx = event.radius * Math.cos(event.theta);
-    var dy = event.radius * Math.sin(event.theta);
+    //line(event.x1, event.y1, event.x2, event.y2);
+
+    var dx = 100 * Math.cos(event.theta);
+    var dy = 100 * Math.sin(event.theta);
     line(event.x - dx, event.y - dy, event.x + dx, event.y + dy);
     event.originalEvent.preventDefault();
   })
