@@ -11,7 +11,7 @@
 
 ## Introduction
 
-This module tells you in a consistent manner about the geometry of user interactions, which is perhaps what you really wanted to know when you set out to write a nice graphical interface.
+This module tells you in a consistent manner about the geometry of user interactions, which is perhaps what you really wanted to know when you set out to write a nice graphical interface. All positions are normlized to the inerval `[-1, 1]`, where the left bottom of the element is `[-1, -1]` and the top right is `[1, 1]`.
 
 Mouse buttons and mods are output in the style of [mouse-change](https://github.com/mikolalysenko/mouse-change).
 
@@ -35,17 +35,19 @@ normalizedInteractionsEvents({
 //     control: false,
 //     meta: false
 //   },
-//   x0: 638,
-//   y0: 179,
-//   x: 638,
-//   y: 179,
-//   dx: -1,
-//   dy: 2,
+//   x0: -0.0129,
+//   y0: -0.923,
+//   x1: -0.0129,
+//   y1: -0.923,
+//   x2: null,
+//   y2: null,
+//   x: -0.129,
+//   y: -0.923,
+//   dx: -0.0011,
+//   dy: -0.0038,
 //   dz: 0,
-//   dragging: true,
 //   zoomx: 1,
 //   zoomy: 1,
-//   radius: 0,
 //   theta: 0,
 //   dtheta: 0,
 //   originalEvent: MouseEvent {isTrusted: true, screenX: 638, …}
@@ -82,19 +84,22 @@ The returned event has the following fields:
 
 - `buttons`: mouse buttons pressed, in the return format of [mouse-change](https://github.com/mikolalysenko/mouse-change).
 - `mods`: modifier keys presed, in the return format of [mouse-change](https://github.com/mikolalysenko/mouse-change).
-- `x`: current x position, relative to element offset. For wheel reflects current mouse position. For pinches, reflects average x position of touches.
-- `y`: current y position, relative to element offset.
-- `x0`: initial x position relative to corresponding start event (e.g. for a pinchmove event reflects the location of pinchstart)
-- `y0`: initial y position relative to corresponding start event
+- `x`: current x position. For wheel reflects current mouse position. For pinches, reflects average x position of touches.
+- `y`: current y position.
+- `x0`: x position of the corresponding start event (e.g. for a pinchmove event reflects the location of pinchstart)
+- `y0`: y position of the corresponding start event
+- `x1`: x position of the first event
+- `y1`: y position of the first event
+- `x2`: x position of the second event. `null` for mouse or wheel events of when only one touch is occuring.
+- `y2`: y position of the second event. `null` for mouse or wheel events of when only one touch is occuring.
+- `active`: Number of active touches. `0` for passive move events. `1` for dragging, wheel, and touch events, `2` for pinch events. Better than using the mouse depressed state for detecting when to assume a drag since you want to be sure that the drag *originated* within the window.
 - `dx`: change in x position from previous event. For wheel event returns wheel event deltaX.
 - `dy`: change in y position. For wheel event returns wheel event deltaY.
 - `dz`: change in z position. For wheel event returns wheel event deltaY. Is zero except for wheel events (where it's still almost certainly zero).
-- `dragging`: true while a mouse, touch, or pinch interaction is taking place or for single wheel events. Better than using the mouse depressed state for detecting when to assume a drag since you want to be sure that the drag *originated* within the window.
 - `zoomx`: horizontal zoom factor relative to previous event. `1` reflects no change. For pinch events only. (Interpreting wheel events as a zoom is left to usage.)
 - `zoomy`: vertical zoom factor relative to previous event. `1` reflects no change. For pinch events only.
-- `theta`: angle of the second touch relative to the first. Nonzero for pinch events only.
+- `theta`: angle of the second touch relative to the first. Nonzero for pinch events only. View aspect ratio is taken into account when computing.
 - `dtheta`: change in angle from previous event.
-- `radius`: distance between touch events. Nonzero fro pinch events only.
 - `originalEvent`: A reference to the original event. Note that `preventDefault` is *not* called by default.
 
 ## License

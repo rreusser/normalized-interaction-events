@@ -4,7 +4,7 @@
   "description": "Normalized events for desktop and mobile interactions",
   "main": "index.js",
   "scripts": {
-    "start": "budo demo.js --live --open",
+    "start": "budo demo.js --live --open --force-default-index",
     "build": "browserify demo.js | indexhtmlify > index.html"
   },
   "keywords": [],
