@@ -104,7 +104,7 @@ The returned event has the following fields:
 
 ## License
 
-&copy; 2018 Ricky Reusser. MIT License.
+&copy; 2018 Ricky Reusser. MIT License. Touch handling in this code inherits from [touch-pinch](https://github.com/Jam3/touch-pinch/). See [LICENSE.md](./LICENSE.md) for more details.
 
 
 <!-- BADGES -->
